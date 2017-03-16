@@ -86,6 +86,25 @@ class Ps_Sendsms extends Module
             return false;
         }
 
+        # install tabs
+        $tabNames = array();
+        $result = Db::getInstance()->ExecuteS("SELECT * FROM " . _DB_PREFIX_ . "lang order by id_lang");
+        if (is_array($result)) {
+            foreach ($result as $row) {
+                $tabNames['main'][$row['id_lang']] = 'SendSMS';
+                $tabNames['history'][$row['id_lang']] = 'Istoric';
+                $tabNames['campaign'][$row['id_lang']] = 'Campanie';
+                $tabNames['test'][$row['id_lang']] = 'Trimitere test';
+            }
+        }
+        $this->installModuleTab('SendSMSTab', $tabNames['main'], 0);
+        $idTab = Tab::getIdFromClassName("IMPROVE");
+        $this->installModuleTab('SendSMSTab', $tabNames['main'], $idTab);
+        $idTab = Tab::getIdFromClassName("SendSMSTab");
+        $this->installModuleTab('AdminHistory', $tabNames['history'], $idTab);
+        $this->installModuleTab('AdminCampaign', $tabNames['campaign'], $idTab);
+        $this->installModuleTab('AdminSendTest', $tabNames['test'], $idTab);
+
         return true;
     }
 
@@ -101,14 +120,19 @@ class Ps_Sendsms extends Module
             }
         }
 
+        // Uninstall Tabs
+        $this->uninstallModuleTab('SendSMSTab');
+        $this->uninstallModuleTab('AdminHistory');
+        $this->uninstallModuleTab('AdminCampaign');
+        $this->uninstallModuleTab('AdminSendTest');
+
         return true;
     }
 
     public function getContent()
     {
         $output = null;
-        if (Tools::isSubmit('submit'.$this->name))
-        {
+        if (Tools::isSubmit('submit'.$this->name)) {
             # get info
             $username = strval(Tools::getValue('PS_SENDSMS_USERNAME'));
             $password = strval(Tools::getValue('PS_SENDSMS_PASSWORD'));
@@ -144,75 +168,7 @@ class Ps_Sendsms extends Module
                 $output .= $this->displayConfirmation($this->l('Setarile au fost actualizate'));
             }
         }
-        return $output.$this->displayForm().$this->initList();
-    }
-
-    public function initList()
-    {
-        $sql = 'SELECT * FROM ' . _DB_PREFIX_ . 'ps_sendsms_history ORDER BY id DESC';
-        if ($result = Db::getInstance()->ExecuteS($sql)) {
-            $this->fields_list = array(
-                'id' => array(
-                    'title' => $this->l('Id'),
-                    'width' => 30,
-                    'type' => 'text',
-                    'ajax' => true
-                ),
-                'phone' => array(
-                    'title' => $this->l('Telefon'),
-                    'width' => 140,
-                    'type' => 'text',
-                ),
-                'status' => array(
-                    'title' => $this->l('Status'),
-                    'width' => 30,
-                    'type' => 'text',
-                ),
-                'message' => array(
-                    'title' => $this->l('Mesaj'),
-                    'width' => 50,
-                    'type' => 'text',
-                ),
-                'details' => array(
-                    'title' => $this->l('Detalii'),
-                    'width' => 140,
-                    'type' => 'text',
-                ),
-                'content' => array(
-                    'title' => $this->l('Continut'),
-                    'width' => 140,
-                    'type' => 'text',
-                ),
-                'type' => array(
-                    'title' => $this->l('Tip'),
-                    'width' => 50,
-                    'type' => 'text',
-                ),
-                'sent_on' => array(
-                    'title' => $this->l('Data'),
-                    'width' => 140,
-                    'type' => 'text',
-                ),
-            );
-            $helper = new HelperList();
-
-            $helper->shopLinkType = '';
-
-            $helper->simple_header = false;
-
-            // Actions to be displayed in the "Actions" column
-            $helper->actions = array();
-
-            $helper->identifier = 'id';
-            $helper->show_toolbar = true;
-            $helper->title = 'Istoric';
-            $helper->table = 'ps_sendsms_history';
-
-            $helper->token = Tools::getAdminTokenLite('AdminModules');
-            $helper->currentIndex = AdminController::$currentIndex . '&configure=' . $this->name;
-            return $helper->generateList($result, $this->fields_list);
-        }
-        return false;
+        return $output.$this->displayForm();
     }
 
     public function displayForm()
@@ -355,23 +311,15 @@ class Ps_Sendsms extends Module
         $statusId = $params['newOrderStatus']->id;
 
         # get configuration
-        $username = Configuration::get('PS_SENDSMS_USERNAME');
-        $password = Configuration::get('PS_SENDSMS_PASSWORD');
-        $isSimulation = Configuration::get('PS_SENDSMS_SIMULATION');
-        $simulationPhone = Configuration::get('PS_SENDSMS_SIMULATION_PHONE');
         $statuses = unserialize(Configuration::get('PS_SENDSMS_STATUS'));
-        if (isset($statuses[$statusId]) && !empty($username) && !empty($password)) {
+        if (isset($statuses[$statusId])) {
             # get order details
             $order = new Order($orderId);
             $billingAddress = new Address($order->id_address_invoice);
             $shippingAddress = new Address($order->id_address_delivery);
 
             # get billing phone number
-            if ($isSimulation && !empty($simulationPhone)) {
-                $phone = $this->validatePhone($simulationPhone);
-            } else {
-                $phone = $this->validatePhone($this->selectPhone($billingAddress->phone, $billingAddress->phone_mobile));
-            }
+            $phone = $this->validatePhone($this->selectPhone($billingAddress->phone, $billingAddress->phone_mobile));
 
             # transform variables
             $message = $statuses[$statusId];
@@ -390,7 +338,7 @@ class Ps_Sendsms extends Module
 
             if (!empty($phone)) {
                 # send sms
-                $this->sendSms($username, $password, $phone, $message, Configuration::get('PS_SENDSMS_LABEL'));
+                $this->sendSms($phone, $message);
             }
         }
     }
@@ -409,7 +357,7 @@ class Ps_Sendsms extends Module
         return $phone;
     }
 
-    private function validatePhone($phone)
+    public function validatePhone($phone)
     {
         $phone = preg_replace('/\D/', '', $phone);
         if (substr($phone, 0, 1) == '0' && strlen($phone) == 10) {
@@ -419,11 +367,28 @@ class Ps_Sendsms extends Module
         } elseif (strlen($phone) == 13 && substr($phone, 0, 2) == '00') {
             $phone = substr($phone, 2);
         }
+        if (strlen($phone) < 11) {
+            return false;
+        }
         return $phone;
     }
 
-    private function sendSms($username, $password, $phone, $message, $from, $type = 'order')
+    public function sendSms($phone, $message, $type = 'order')
     {
+        $username = Configuration::get('PS_SENDSMS_USERNAME');
+        $password = Configuration::get('PS_SENDSMS_PASSWORD');
+        $isSimulation = Configuration::get('PS_SENDSMS_SIMULATION');
+        $simulationPhone = $this->validatePhone(Configuration::get('PS_SENDSMS_SIMULATION_PHONE'));
+        $from = Configuration::get('PS_SENDSMS_LABEL');
+        if (empty($username) || empty($password)) {
+            return false;
+        }
+        if ($isSimulation && empty($simulationPhone)) {
+            return false;
+        } elseif ($isSimulation && !empty($simulationPhone)) {
+            $phone = $simulationPhone;
+        }
+        $message = $this->cleanDiacritice($message);
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_HEADER, 0);
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
@@ -468,5 +433,30 @@ class Ps_Sendsms extends Module
             "\xe2\x80\x93");
         $cleanLetters = array("A", "a", "A", "a", "I", "i", "S", "s", "T", "t", "S", "s", "T", "t", "a", " ", "-");
         return str_replace($balarii, $cleanLetters, $string);
+    }
+
+    private function installModuleTab($tabClass, $tabName, $idTabParent)
+    {
+        $tab = new Tab();
+        $tab->name = $tabName;
+        $tab->class_name = $tabClass;
+        $tab->module = $this->name;
+        $tab->id_parent = $idTabParent;
+
+        if (!$tab->save()) {
+            return false;
+        }
+        return Tab::getIdFromClassName($tabClass);
+    }
+
+    private function uninstallModuleTab($tabClass)
+    {
+        $idTab = Tab::getIdFromClassName($tabClass);
+        if ($idTab != 0) {
+            $tab = new Tab($idTab);
+            $tab->delete();
+            return true;
+        }
+        return false;
     }
 }
