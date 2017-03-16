@@ -22,7 +22,16 @@
                     Mesaj
                 </label>
                 <div class="col-lg-9">
-                    <textarea name="sendsms_message" id="sendsms_message" rows="7" class="textarea-autosize" style="overflow: hidden; word-wrap: break-word; resize: none; height: 133px;"></textarea>
+                    <textarea name="sendsms_message" id="sendsms_message" rows="7" class="textarea-autosize" style="overflow: hidden; word-wrap: break-word; resize: none; height: 133px;" maxlength="160"></textarea>
+                    <p>160 caractere ramase</p>
+                    <script type="text/javascript">
+                        var ps_sendsms_content = document.getElementById('sendsms_message');
+                        ps_sendsms_content.onkeyup = function() {
+                            var text_length = this.value.length;
+                            var text_remaining = 160 - text_length;
+                            this.nextElementSibling.innerHTML = text_remaining + ' caractere ramase';
+                        }
+                    </script>
                 </div>
             </div>
         </div>
