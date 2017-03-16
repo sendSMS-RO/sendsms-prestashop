@@ -61,6 +61,7 @@ class Ps_Sendsms extends Module
 
     private function uninstallDb()
     {
+        return true;
         if (!Db::getInstance()->Execute('DROP TABLE `'._DB_PREFIX_.'ps_sendsms_history`;')) {
             return false;
         }
@@ -85,6 +86,13 @@ class Ps_Sendsms extends Module
         if (!$this->registerHook('actionOrderStatusPostUpdate')) {
             return false;
         }
+//        if (!$this->registerHook('newOrder')) {
+//            return false;
+//        }
+        if (!$this->registerHook('displayAdminOrderLeft')) {
+            return false;
+        }
+
 
         # install tabs
         $tabNames = array();
@@ -304,8 +312,71 @@ class Ps_Sendsms extends Module
         return $helper->generateForm($fields_form);
     }
 
+    public function hookDisplayAdminOrderLeft($params)
+    {
+        if (!$this->active) {
+            return false;
+        }
+
+        if (Tools::isSubmit('submitsendsms_order')) {
+            require_once _PS_CLASS_DIR_.'order/Order.php';
+            require_once _PS_CLASS_DIR_.'Customer.php';
+            $id_order = (int)$params['id_order'];
+            $order = new Order($id_order);
+            $customer = new Customer((int)$order->id_customer);
+
+            $phone = strval(Tools::getValue('sendsms_phone'));
+            $message = strval(Tools::getValue('sendsms_message'));
+            $phone = $this->validatePhone($phone);
+            if (!empty($phone) && !empty($message)) {
+                $this->sendSms($phone, $message, 'single order');
+                $msg = 'Mesajul a fost trimis';
+                $msg_error = false;
+
+                # add message
+                require_once _PS_CLASS_DIR_.'CustomerMessage.php';
+                require_once _PS_CLASS_DIR_.'CustomerThread.php';
+                //check if a thread already exist
+                $id_customer_thread = CustomerThread::getIdCustomerThreadByEmailAndIdOrder($customer->email, $order->id);
+                if (!$id_customer_thread) {
+                    $customer_thread = new CustomerThread();
+                    $customer_thread->id_contact = 0;
+                    $customer_thread->id_customer = (int)$order->id_customer;
+                    $customer_thread->id_shop = (int)$this->context->shop->id;
+                    $customer_thread->id_order = (int)$order->id;
+                    $customer_thread->id_lang = (int)$this->context->language->id;
+                    $customer_thread->email = $customer->email;
+                    $customer_thread->status = 'open';
+                    $customer_thread->token = Tools::passwdGen(12);
+                    $customer_thread->add();
+                } else {
+                    $customer_thread = new CustomerThread((int)$id_customer_thread);
+                }
+                $customer_message = new CustomerMessage();
+                $customer_message->id_customer_thread = $customer_thread->id;
+                $customer_message->id_employee = (int)$this->context->employee->id;
+                $customer_message->message = 'Mesaj SMS trimis catre '.$phone.': '.$message;
+                $customer_message->private = 1;
+                $customer_message->add();
+            } else {
+                $msg = 'Numarul de telefon nu este valid';
+                $msg_error = true;
+            }
+            $this->context->smarty->assign(array(
+                'sendsms_msg' => $msg,
+                'sendsms_error' => $msg_error
+            ));
+        }
+
+        return $this->display(__FILE__, 'admin_order_sendsms.tpl');
+    }
+
     public function hookActionOrderStatusPostUpdate($params)
     {
+        if (!$this->active) {
+            return false;
+        }
+
         # get params
         $orderId = $params['id_order'];
         $statusId = $params['newOrderStatus']->id;

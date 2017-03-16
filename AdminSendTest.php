@@ -59,7 +59,7 @@ class AdminSendTest extends ModuleAdminController
             $phone = strval(Tools::getValue('sendsms_phone'));
             $message = strval(Tools::getValue('sendsms_message'));
             $phone = $this->module->validatePhone($phone);
-            if (!empty($phone)) {
+            if (!empty($phone) && !empty($message)) {
                 $this->module->sendSms($phone, $message, 'test');
                 Tools::redirectAdmin(self::$currentIndex.'&conf='.$this->index.'&token='.$this->token);
             } else {
