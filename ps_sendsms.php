@@ -254,10 +254,11 @@ class Ps_Sendsms extends Module
             $fields_form[0]['form']['input'][] = array(
                 'type' => 'textarea',
                 'rows' => 7,
-                'label' => $this->l('Mesaj: '.$status['name']),
-                'desc' => $this->l('Variabile disponibile: {billing_first_name}, {billing_last_name}, {shipping_first_name}, {shipping_last_name}, {order_number}, {order_date}, {order_total}'),
+                'label' => $this->l('Mesaj: ').'<strong>'.$status['name'].'</strong>'.'<br /><br />'.$this->l('Variabile disponibile: {billing_first_name}, {billing_last_name}, {shipping_first_name}, {shipping_last_name}, {order_number}, {order_date}, {order_total}'),
                 'name' => 'PS_SENDSMS_STATUS_'.$status['id_order_state'],
-                'required' => false
+                'required' => false,
+                'class' => 'ps_sendsms_content',
+                'desc' => '160 caractere ramase'
             );
         }
 
@@ -308,6 +309,10 @@ class Ps_Sendsms extends Module
         foreach ($orderStatuses as $status) {
             $helper->fields_value['PS_SENDSMS_STATUS_'.$status['id_order_state']] = isset($statuses[$status['id_order_state']]) ? $statuses[$status['id_order_state']] : '';
         }
+
+        $this->context->controller->addJS(
+            Tools::getShopDomainSsl(true, true).__PS_BASE_URI__.'modules/'.$this->name.'/count.js'
+        );
 
         return $helper->generateForm($fields_form);
     }

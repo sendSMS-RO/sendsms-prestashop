@@ -37,7 +37,9 @@ class AdminSendTest extends ModuleAdminController
                     'rows' => 7,
                     'label' => 'Mesaj',
                     'name' => 'sendsms_message',
-                    'required' => true
+                    'required' => true,
+                    'class' => 'ps_sendsms_content',
+                    'desc' => '160 caractere ramase'
                 )
             ),
             'submit' => array(
@@ -49,6 +51,10 @@ class AdminSendTest extends ModuleAdminController
         if (!($obj = $this->loadObject(true))) {
             return;
         }
+
+        $this->context->controller->addJS(
+            Tools::getShopDomainSsl(true, true).__PS_BASE_URI__.'modules/'.$this->module->name.'/count.js'
+        );
 
         return parent::renderForm();
     }
