@@ -86,9 +86,9 @@ class Ps_Sendsms extends Module
         if (!$this->registerHook('actionOrderStatusPostUpdate')) {
             return false;
         }
-//        if (!$this->registerHook('newOrder')) {
-//            return false;
-//        }
+        if (!$this->registerHook('displayPaymentTop')) {
+            return false;
+        }
         if (!$this->registerHook('displayAdminOrderLeft')) {
             return false;
         }
@@ -374,6 +374,25 @@ class Ps_Sendsms extends Module
         }
 
         return $this->display(__FILE__, 'admin_order_sendsms.tpl');
+    }
+
+    public function hookDisplayOrderConfirmation($params)
+    {
+        print_r($params, true);
+    }
+
+    public function hookDisplayPaymentTop($params)
+    {
+        if (!$this->active) {
+            return false;
+        }
+
+        $optout = Configuration::get('PS_SENDSMS_OPTOUT');
+        if (!$optout) {
+            return false;
+        }
+
+        return $this->display(__FILE__, 'checkout_optout.tpl');
     }
 
     public function hookActionOrderStatusPostUpdate($params)
