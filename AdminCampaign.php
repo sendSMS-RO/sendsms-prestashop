@@ -138,7 +138,7 @@ class AdminCampaign extends ModuleAdminController
         $this->fields_value['sendsms_billing_state'] = $billingState;
 
         $form1 = parent::renderForm();
-        
+
         $this->fields_form = array(
             'legend' => array(
                 'title' => 'Rezultate filtrare clienti'

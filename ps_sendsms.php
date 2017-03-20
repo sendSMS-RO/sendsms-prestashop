@@ -101,7 +101,6 @@ class Ps_Sendsms extends Module
                 $tabNames['test'][$row['id_lang']] = 'Trimitere test';
             }
         }
-        $this->installModuleTab('SendSMSTab', $tabNames['main'], 0);
         $idTab = Tab::getIdFromClassName("IMPROVE");
         $this->installModuleTab('SendSMSTab', $tabNames['main'], $idTab);
         $idTab = Tab::getIdFromClassName("SendSMSTab");
