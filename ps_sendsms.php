@@ -11,7 +11,6 @@ class Ps_Sendsms extends Module
         'PS_SENDSMS_LABEL',
         'PS_SENDSMS_SIMULATION',
         'PS_SENDSMS_SIMULATION_PHONE',
-        'PS_SENDSMS_OPTOUT',
         'PS_SENDSMS_STATUS'
     );
 
@@ -86,9 +85,6 @@ class Ps_Sendsms extends Module
         if (!$this->registerHook('actionOrderStatusPostUpdate')) {
             return false;
         }
-        if (!$this->registerHook('displayPaymentTop')) {
-            return false;
-        }
         if (!$this->registerHook('displayAdminOrderLeft')) {
             return false;
         }
@@ -147,7 +143,6 @@ class Ps_Sendsms extends Module
             $label = strval(Tools::getValue('PS_SENDSMS_LABEL'));
             $isSimulation = strval(Tools::getValue('PS_SENDSMS_SIMULATION_'));
             $simulationPhone = strval(Tools::getValue('PS_SENDSMS_SIMULATION_PHONE'));
-            $optout = strval(Tools::getValue('PS_SENDSMS_OPTOUT_'));
             $statuses = array();
 
             $orderStatuses = OrderState::getOrderStates($this->context->language->id);
@@ -171,7 +166,6 @@ class Ps_Sendsms extends Module
                 }
                 Configuration::updateValue('PS_SENDSMS_LABEL', $label);
                 Configuration::updateValue('PS_SENDSMS_SIMULATION', !empty($isSimulation)?1:0);
-                Configuration::updateValue('PS_SENDSMS_OPTOUT', !empty($optout)?1:0);
                 Configuration::updateValue('PS_SENDSMS_STATUS', serialize($statuses));
                 $output .= $this->displayConfirmation($this->l('Setarile au fost actualizate'));
             }
@@ -229,22 +223,7 @@ class Ps_Sendsms extends Module
                     'label' => $this->l('Numar telefon simulare'),
                     'name' => 'PS_SENDSMS_SIMULATION_PHONE',
                     'required' => false
-                ),
-                array(
-                    'type' => 'checkbox',
-                    'label' => $this->l('Opt-out in cos'),
-                    'name' => 'PS_SENDSMS_OPTOUT',
-                    'required' => false,
-                    'values' => array(
-                        'query' => array(
-                            array(
-                                'optout' => null,
-                            )
-                        ),
-                        'id' => 'optout',
-                        'name' => 'optout'
-                    )
-                ),
+                )
             )
         );
 
@@ -304,7 +283,6 @@ class Ps_Sendsms extends Module
         $helper->fields_value['PS_SENDSMS_LABEL'] = Configuration::get('PS_SENDSMS_LABEL');
         $helper->fields_value['PS_SENDSMS_SIMULATION_'] = Configuration::get('PS_SENDSMS_SIMULATION');
         $helper->fields_value['PS_SENDSMS_SIMULATION_PHONE'] = Configuration::get('PS_SENDSMS_SIMULATION_PHONE');
-        $helper->fields_value['PS_SENDSMS_OPTOUT_'] = Configuration::get('PS_SENDSMS_OPTOUT');
         $statuses = unserialize(Configuration::get('PS_SENDSMS_STATUS'));
         foreach ($orderStatuses as $status) {
             $helper->fields_value['PS_SENDSMS_STATUS_'.$status['id_order_state']] = isset($statuses[$status['id_order_state']]) ? $statuses[$status['id_order_state']] : '';
@@ -381,20 +359,6 @@ class Ps_Sendsms extends Module
         print_r($params, true);
     }
 
-    public function hookDisplayPaymentTop($params)
-    {
-        if (!$this->active) {
-            return false;
-        }
-
-        $optout = Configuration::get('PS_SENDSMS_OPTOUT');
-        if (!$optout) {
-            return false;
-        }
-
-        return $this->display(__FILE__, 'checkout_optout.tpl');
-    }
-
     public function hookActionOrderStatusPostUpdate($params)
     {
         if (!$this->active) {
@@ -438,7 +402,7 @@ class Ps_Sendsms extends Module
         }
     }
 
-    private function selectPhone($phone, $mobile)
+    public function selectPhone($phone, $mobile)
     {
         # if both, prefer mobile
         if (!empty($phone) && !empty($mobile)) {
