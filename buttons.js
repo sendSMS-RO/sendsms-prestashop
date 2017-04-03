@@ -3,7 +3,13 @@ $(document).ready(function() {
     for (var i = 0; i < ps_sendsms_buttons.length; i++) {
         var ps_sendsms_button = ps_sendsms_buttons[i];
         ps_sendsms_button.onclick = function () {
-            this.parentElement.nextElementSibling.getElementsByTagName('textarea')[0].value += this.innerHTML;
+            // append text
+            var element = this.parentElement.nextElementSibling.getElementsByTagName('textarea')[0];
+            element.value += this.innerHTML;
+            // trigger sms count
+            var text_length = element.value.length;
+            var text_remaining = 160 - text_length;
+            element.nextElementSibling.innerHTML = text_remaining + ' caractere ramase';
         };
     }
 });
