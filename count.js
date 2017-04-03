@@ -7,5 +7,9 @@ $(document).ready(function() {
             var text_remaining = 160 - text_length;
             this.nextElementSibling.innerHTML = text_remaining + ' caractere ramase';
         };
+        // activate on page load
+        var text_length = ps_sendsms_element.value.length;
+        var text_remaining = 160 - text_length;
+        ps_sendsms_element.nextElementSibling.innerHTML = text_remaining + ' caractere ramase';
     }
 });

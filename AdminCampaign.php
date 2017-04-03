@@ -163,7 +163,8 @@ class AdminCampaign extends ModuleAdminController
                         'query' => $numbers,
                         'id' => 'phone',
                         'name' => 'label'
-                    )
+                    ),
+                    'desc' => count($numbers).' numere de telefon'
                 )
             ),
             'submit' => array(

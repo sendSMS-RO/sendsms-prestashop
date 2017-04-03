@@ -187,7 +187,8 @@ class Ps_Sendsms extends Module
                     'type' => 'text',
                     'label' => $this->l('Nume utilizator'),
                     'name' => 'PS_SENDSMS_USERNAME',
-                    'required' => true
+                    'required' => true,
+                    'desc' => 'Nu aveți cont sendSMS? Înregistrați-vă GRATUIT <a href="http://www.sendsms.ro/ro" target="_blank">aici</a>. Mai multe detalii despre sendSMS puteți afla <a href="http://www.sendsms.ro/ro" target="_blank">aici</a>.'
                 ),
                 array(
                     'type' => 'password',
@@ -200,7 +201,8 @@ class Ps_Sendsms extends Module
                     'label' => $this->l('Label expeditor'),
                     'name' => 'PS_SENDSMS_LABEL',
                     'required' => true,
-                    'desc' => 'maxim 11 caractere alfa numerice'
+                    'desc' => 'maxim 11 caractere alfa numerice',
+                    'maxlength' => 11
                 ),
                 array(
                     'type' => 'checkbox',
@@ -232,11 +234,17 @@ class Ps_Sendsms extends Module
             $fields_form[0]['form']['input'][] = array(
                 'type' => 'textarea',
                 'rows' => 7,
-                'label' => $this->l('Mesaj: ').'<strong>'.$status['name'].'</strong>'.'<br /><br />'.$this->l('Variabile disponibile: {billing_first_name}, {billing_last_name}, {shipping_first_name}, {shipping_last_name}, {order_number}, {order_date}, {order_total}'),
+                'label' => $this->l('Mesaj: ').'<strong>'.$status['name'].'</strong>'.'<br /><br />'.$this->l('Variabile disponibile:'). '<button type="button" class="ps_sendsms_button">{billing_first_name}</button> 
+<button type="button" class="ps_sendsms_button">{billing_last_name}</button> 
+<button type="button" class="ps_sendsms_button">{shipping_first_name}</button> 
+<button type="button" class="ps_sendsms_button">{shipping_last_name}</button> 
+<button type="button" class="ps_sendsms_button">{order_number}</button> 
+<button type="button" class="ps_sendsms_button">{order_date}</button> 
+<button type="button" class="ps_sendsms_button">{order_total}</button>'.'<br /><br />'.$this->l('Lasati campul gol daca nu doriti sa trimiteti SMS pentru acest status.'),
                 'name' => 'PS_SENDSMS_STATUS_'.$status['id_order_state'],
                 'required' => false,
                 'class' => 'ps_sendsms_content',
-                'desc' => '160 caractere ramase'
+                'desc' => '<div>Test lorem ipsum</div>'
             );
         }
 
@@ -289,6 +297,9 @@ class Ps_Sendsms extends Module
 
         $this->context->controller->addJS(
             Tools::getShopDomainSsl(true, true).__PS_BASE_URI__.'modules/'.$this->name.'/count.js'
+        );
+        $this->context->controller->addJS(
+            Tools::getShopDomainSsl(true, true).__PS_BASE_URI__.'modules/'.$this->name.'/buttons.js'
         );
 
         return $helper->generateForm($fields_form);
