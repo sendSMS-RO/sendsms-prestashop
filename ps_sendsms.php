@@ -188,11 +188,11 @@ class Ps_Sendsms extends Module
                     'label' => $this->l('Nume utilizator'),
                     'name' => 'PS_SENDSMS_USERNAME',
                     'required' => true,
-                    'desc' => 'Nu aveți cont sendSMS? Înregistrați-vă GRATUIT <a href="http://www.sendsms.ro/ro" target="_blank">aici</a>. Mai multe detalii despre sendSMS puteți afla <a href="http://www.sendsms.ro/ro" target="_blank">aici</a>.'
+                    'desc' => 'Nu aveți cont sendSMS? Înregistrați-vă GRATUIT <a href="https://hub.sendsms.ro/login" target="_blank">aici</a>. Mai multe detalii despre sendSMS puteți afla <a href="http://www.sendsms.ro/ro" target="_blank">aici</a>.'
                 ),
                 array(
                     'type' => 'password',
-                    'label' => $this->l('Parola'),
+                    'label' => $this->l('Parola/Cheie API'),
                     'name' => 'PS_SENDSMS_PASSWORD',
                     'required' => true
                 ),
@@ -229,6 +229,18 @@ class Ps_Sendsms extends Module
         );
 
         # add order statuses to options
+        $defaults = array(
+            10 => 'Comanda numesite.ro cu numarul {order_name} a fost procesata si asteapta plata in valoare totala de {order_total} RON. Info: 0722xxxxxx',
+            14 => 'Comanda numesite.ro cu numarul {order_name} a fost procesata in sistem ramburs. Suma totala de plata este {order_total} RON. Info: 0722xxxxxx',
+            1 => 'Comanda numesite.ro cu numarul {order_name} a fost procesata si asteapta plata in valoare totala de {order_total} RON. Info: 0722xxxxxx',
+            11 => 'Comanda numesite.ro cu numarul {order_name} a fost procesata si asteapta si asteaptam confirmarea PayPal. Info: 0722xxxxxx',
+            6 => 'Comanda numesite.ro cu numarul {order_name} a fost anulata - motivul fiind : lipsa stoc / termen de livrare mai mare de 10 zile. Info: 07xxxxxxxx',
+            5 => 'Comanda numesite.ro cu numarul {order_name} in valoare de {order_total} RON a fost predata catre curier si va fi livrata in maxim 24 ore. Info: 07xxxxxxxx',
+            2 => 'Plata pentru comanda cu numarul {order_name} in valoare de {order_total} RON a fost aceptata! Info: 07xxxxxxxx',
+            8 => 'Am intampinat o eroare in procesarea platii Dvs pentru comanda NumeSite.ro cu numarul {order_name} in valoare de {order_total} RON Info: 07xxxxxxxx',
+            7 => 'Valoarea comenzii NumeSite.ro cu numarul {order_number}  in valoare de {order_total} RON a fost restituita! Info: 07xxxxxxxx',
+            4 => 'Comanda cu numarul {order_number} in valoare de {order_total} RON a fost predata catre curier si va fi livrata in maxim 24 ore. Info: 07xxxxxxxx'
+        );
         $orderStatuses = OrderState::getOrderStates($this->context->language->id);
         foreach ($orderStatuses as $status) {
             $fields_form[0]['form']['input'][] = array(
@@ -244,7 +256,7 @@ class Ps_Sendsms extends Module
                 'name' => 'PS_SENDSMS_STATUS_'.$status['id_order_state'],
                 'required' => false,
                 'class' => 'ps_sendsms_content',
-                'desc' => '<div>Test lorem ipsum</div>'
+                'desc' => '<div>'.(isset($defaults[$status['id_order_state']])?'Ex: '.$defaults[$status['id_order_state']]:'').'</div>'
             );
         }
 
@@ -461,7 +473,7 @@ class Ps_Sendsms extends Module
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_HEADER, 0);
         curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($curl, CURLOPT_URL, 'https://hub.sendsms.ro/json?action=message_send&username='.urlencode($username).'&password='.urlencode($password).'&from='.urlencode($from).'&to='.urlencode($phone).'&text='.urlencode($message));
+        curl_setopt($curl, CURLOPT_URL, 'https://hub.sendsms.ro/json?action=message_send&username='.$username.'&password='.$password.'&from='.urlencode($from).'&to='.urlencode($phone).'&text='.urlencode($message));
         curl_setopt($curl, CURLOPT_HTTPHEADER, array("Connection: keep-alive"));
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 
