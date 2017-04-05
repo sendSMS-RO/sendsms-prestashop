@@ -18,7 +18,7 @@ class Ps_Sendsms extends Module
     {
         $this->name = 'ps_sendsms';
         $this->tab = 'advertising_marketing';
-        $this->version = '1.0.0';
+        $this->version = '1.0.1';
         $this->author = 'Any Place Media SRL';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = array('min' => '1.6', 'max' => _PS_VERSION_);
@@ -470,26 +470,29 @@ class Ps_Sendsms extends Module
             $phone = $simulationPhone;
         }
         $message = $this->cleanDiacritice($message);
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_HEADER, 0);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($curl, CURLOPT_URL, 'https://hub.sendsms.ro/json?action=message_send&username='.$username.'&password='.$password.'&from='.urlencode($from).'&to='.urlencode($phone).'&text='.urlencode($message));
-        curl_setopt($curl, CURLOPT_HTTPHEADER, array("Connection: keep-alive"));
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 
-        $status = curl_exec($curl);
-        $status = json_decode($status, true);
+        if (!empty(trim($message))) {
+            $curl = curl_init();
+            curl_setopt($curl, CURLOPT_HEADER, 0);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($curl, CURLOPT_URL, 'https://hub.sendsms.ro/json?action=message_send&username=' . $username . '&password=' . $password . '&from=' . urlencode($from) . '&to=' . urlencode($phone) . '&text=' . urlencode($message));
+            curl_setopt($curl, CURLOPT_HTTPHEADER, array("Connection: keep-alive"));
+            curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 
-        # history
-        Db::getInstance()->insert('ps_sendsms_history', array(
-            'phone' => pSQL($phone),
-            'status' => isset($status['status'])?pSQL($status['status']):pSQL(''),
-            'message' => isset($status['message'])?pSQL($status['message']):pSQL(''),
-            'details' => isset($status['details'])?pSQL($status['details']):pSQL(''),
-            'content' => $message,
-            'type' => $type,
-            'sent_on' => date('Y-m-d H:i:s')
-        ));
+            $status = curl_exec($curl);
+            $status = json_decode($status, true);
+
+            # history
+            Db::getInstance()->insert('ps_sendsms_history', array(
+                'phone' => pSQL($phone),
+                'status' => isset($status['status']) ? pSQL($status['status']) : pSQL(''),
+                'message' => isset($status['message']) ? pSQL($status['message']) : pSQL(''),
+                'details' => isset($status['details']) ? pSQL($status['details']) : pSQL(''),
+                'content' => $message,
+                'type' => $type,
+                'sent_on' => date('Y-m-d H:i:s')
+            ));
+        }
     }
 
     function cleanDiacritice($string)
