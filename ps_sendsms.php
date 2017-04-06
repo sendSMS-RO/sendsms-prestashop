@@ -18,7 +18,7 @@ class Ps_Sendsms extends Module
     {
         $this->name = 'ps_sendsms';
         $this->tab = 'advertising_marketing';
-        $this->version = '1.0.1';
+        $this->version = '1.0.2';
         $this->author = 'Any Place Media SRL';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = array('min' => '1.6', 'max' => _PS_VERSION_);
@@ -475,7 +475,7 @@ class Ps_Sendsms extends Module
             $curl = curl_init();
             curl_setopt($curl, CURLOPT_HEADER, 0);
             curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($curl, CURLOPT_URL, 'https://hub.sendsms.ro/json?action=message_send&username=' . $username . '&password=' . $password . '&from=' . urlencode($from) . '&to=' . urlencode($phone) . '&text=' . urlencode($message));
+            curl_setopt($curl, CURLOPT_URL, 'https://hub.sendsms.ro/json?action=message_send&username=' . $username . '&password=' . $password . '&from=' . $from . '&to=' . $phone . '&text=' . urlencode($message));
             curl_setopt($curl, CURLOPT_HTTPHEADER, array("Connection: keep-alive"));
             curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 
