@@ -18,7 +18,7 @@ class Ps_Sendsms extends Module
     {
         $this->name = 'ps_sendsms';
         $this->tab = 'advertising_marketing';
-        $this->version = '1.0.2';
+        $this->version = '1.0.3';
         $this->author = 'Any Place Media SRL';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = array('min' => '1.6', 'max' => _PS_VERSION_);
@@ -249,7 +249,8 @@ class Ps_Sendsms extends Module
                 'label' => $this->l('Mesaj: ').'<strong>'.$status['name'].'</strong>'.'<br /><br />'.$this->l('Variabile disponibile:'). '<button type="button" class="ps_sendsms_button">{billing_first_name}</button> 
 <button type="button" class="ps_sendsms_button">{billing_last_name}</button> 
 <button type="button" class="ps_sendsms_button">{shipping_first_name}</button> 
-<button type="button" class="ps_sendsms_button">{shipping_last_name}</button> 
+<button type="button" class="ps_sendsms_button">{shipping_last_name}</button>
+<button type="button" class="ps_sendsms_button">{shipping_number}</button> 
 <button type="button" class="ps_sendsms_button">{order_number}</button> 
 <button type="button" class="ps_sendsms_button">{order_date}</button> 
 <button type="button" class="ps_sendsms_button">{order_total}</button>'.'<br /><br />'.$this->l('Lasati campul gol daca nu doriti sa trimiteti SMS pentru acest status.'),
@@ -410,6 +411,7 @@ class Ps_Sendsms extends Module
                 '{shipping_first_name}' => $this->cleanDiacritice($shippingAddress->firstname),
                 '{shipping_last_name}' => $this->cleanDiacritice($shippingAddress->lastname),
                 '{order_number}' => $order->reference,
+                '{shipping_number}' => $order->shipping_number,
                 '{order_date}' => date('d.m.Y', strtotime($order->date_add)),
                 '{order_total}' => number_format($order->total_paid, 2, '.', '')
             );
@@ -417,10 +419,8 @@ class Ps_Sendsms extends Module
                 $message = str_replace($key, $value, $message);
             }
 
-            if (!empty($phone)) {
-                # send sms
-                $this->sendSms($phone, $message);
-            }
+            # send sms
+            $this->sendSms($phone, $message);
         }
     }
 
@@ -454,7 +454,7 @@ class Ps_Sendsms extends Module
         return $phone;
     }
 
-    public function sendSms($phone, $message, $type = 'order')
+    public function sendSms($phone = '', $message, $type = 'order')
     {
         $username = Configuration::get('PS_SENDSMS_USERNAME');
         $password = Configuration::get('PS_SENDSMS_PASSWORD');
@@ -468,6 +468,9 @@ class Ps_Sendsms extends Module
             return false;
         } elseif ($isSimulation && !empty($simulationPhone)) {
             $phone = $simulationPhone;
+        }
+        if (empty($phone)) {
+            return false;
         }
         $message = $this->cleanDiacritice($message);
 
