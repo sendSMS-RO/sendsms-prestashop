@@ -250,7 +250,7 @@ class Ps_Sendsms extends Module
 <button type="button" class="ps_sendsms_button">{billing_last_name}</button> 
 <button type="button" class="ps_sendsms_button">{shipping_first_name}</button> 
 <button type="button" class="ps_sendsms_button">{shipping_last_name}</button>
-<button type="button" class="ps_sendsms_button">{shipping_number}</button> 
+<button type="button" class="ps_sendsms_button">{tracking_number}</button> 
 <button type="button" class="ps_sendsms_button">{order_number}</button> 
 <button type="button" class="ps_sendsms_button">{order_date}</button> 
 <button type="button" class="ps_sendsms_button">{order_total}</button>'.'<br /><br />'.$this->l('Lasati campul gol daca nu doriti sa trimiteti SMS pentru acest status.'),
@@ -399,6 +399,11 @@ class Ps_Sendsms extends Module
             $order = new Order($orderId);
             $billingAddress = new Address($order->id_address_invoice);
             $shippingAddress = new Address($order->id_address_delivery);
+            $order_carrier = new OrderCarrier((int)$order->getIdOrderCarrier());
+            $shipping_number = $order_carrier->tracking_number;
+            if(empty($shipping_number)){
+                $shipping_number = $order->shipping_number;
+            }
 
             # get billing phone number
             $phone = $this->validatePhone($this->selectPhone($billingAddress->phone, $billingAddress->phone_mobile));
@@ -411,7 +416,7 @@ class Ps_Sendsms extends Module
                 '{shipping_first_name}' => $this->cleanDiacritice($shippingAddress->firstname),
                 '{shipping_last_name}' => $this->cleanDiacritice($shippingAddress->lastname),
                 '{order_number}' => $order->reference,
-                '{shipping_number}' => $order->shipping_number,
+                '{tracking_number}' => $shipping_number,
                 '{order_date}' => date('d.m.Y', strtotime($order->date_add)),
                 '{order_total}' => number_format($order->total_paid, 2, '.', '')
             );
