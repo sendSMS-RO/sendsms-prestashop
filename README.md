@@ -12,3 +12,4 @@ Din rubrica „Modules” a paginii de administrare, incarcati fisierul .zip des
 Cand incarcarea s-a finalizat, activati modulul.
 Creati un cont pe platforma SendSMS.ro de si achizitionati credit. Aceleasi date de autentificare vor fi folosite si pentru configurarea pluginul.
 Configurati si personalizati modulul.
+Important! - in locul parolei inserati API Key ul generat din platforma sendSMS.ro, acest Key se va bloca pe IP ul primului request, se pot generea API Key uri nelimitat
